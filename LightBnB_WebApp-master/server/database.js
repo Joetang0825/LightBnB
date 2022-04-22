@@ -2,14 +2,13 @@ const properties = require('./json/properties.json');
 const users = require('./json/users.json');
 const { Pool } = require('pg');
 
+// configuration to connect to local database
 const pool = new Pool({
   user: 'vagrant',
   password: '123',
   host: 'localhost',
   database: 'lightbnb'
 });
-
-
 
 
 /// Users
@@ -21,6 +20,7 @@ const pool = new Pool({
  */
 const getUserWithEmail = function (email) {
 
+  // compare lowercase of email from database and lowercase of email entered by user
   const queryString = `
   SELECT *
   FROM users
@@ -29,9 +29,11 @@ const getUserWithEmail = function (email) {
 
   return pool.query(queryString, [email.toLowerCase()])
     .then((result) => {
+      // return null if email is not found
       if (result.rows.length === 0) {
         return null;
       }
+      // return a user object that matches the provided email
       return result.rows[0];
     })
     .catch((err) => {
@@ -46,6 +48,8 @@ exports.getUserWithEmail = getUserWithEmail;
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function (id) {
+
+  // query database with provided user id
   const queryString = `
   SELECT *
   FROM users
@@ -54,9 +58,11 @@ const getUserWithId = function (id) {
 
   return pool.query(queryString, [id])
     .then((result) => {
+      // return null if user id is not found
       if (result.rows.length === 0) {
         return null;
       }
+      // return a user object that matches the provided user id
       return result.rows[0];
     })
     .catch((err) => {
@@ -72,6 +78,8 @@ exports.getUserWithId = getUserWithId;
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser = function (user) {
+
+  // Insert a new user to the database and return the user object
   const queryString = `
   INSERT INTO users (name, email, password)
   VALUES ($1, $2, $3)
@@ -103,6 +111,8 @@ exports.addUser = addUser;
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function (guest_id, limit = 10) {
+
+  // query database to find all reservation for a user
   const queryString = `
   SELECT reservations.*, properties.*
   FROM reservations
@@ -122,16 +132,13 @@ const getAllReservations = function (guest_id, limit = 10) {
 
   return pool.query(queryString, values)
     .then((result) => {
+      // return all reservations for provided user
       return result.rows;
     })
     .catch((err) => {
       console.log(err.message);
     });
 
-
-
-
-  // return getAllProperties(null, 2);
 }
 exports.getAllReservations = getAllReservations;
 
@@ -148,31 +155,34 @@ exports.getAllReservations = getAllReservations;
 
 const getAllProperties = (options, limit = 10) => {
 
-  //console.log(options);
-
   const queryParams = [];
 
+  // query database to find all properties and their average rating that match the search criteria
   let queryString = `
   SELECT properties.*, avg(property_reviews.rating) as average_rating
   FROM properties
   JOIN property_reviews ON properties.id = property_id
   `;
 
+  // if the login user wants to review his/her own listing, query database using the provided user id
   if (options.owner_id) {
     queryParams.push(`${options.owner_id}`);
     queryString += `WHERE owner_id = $${queryParams.length} `;
   }
 
+  // city is entered as part of the search criteria
   if (options.city) {
     queryParams.push(`%${options.city.toLowerCase()}%`);
     queryString += `WHERE city ILIKE $${queryParams.length} `;
   }
 
+  // minimum price is entered as part of the search criteria
   if (options.minimum_price_per_night) {
     queryParams.push(`${options.minimum_price_per_night * 100}`);
     queryString += `AND cost_per_night > $${queryParams.length} `;
   }
 
+  // maximum price is entered as part of the search criteria
   if (options.maximum_price_per_night) {
     queryParams.push(`${options.maximum_price_per_night * 100}`);
     queryString += `AND cost_per_night < $${queryParams.length} `;
@@ -181,6 +191,7 @@ const getAllProperties = (options, limit = 10) => {
   queryString += `
   GROUP BY properties.id`
 
+  // return properties that have higher average rating than the entered rating
   if (options.minimum_rating) {
     queryParams.push(`${options.minimum_rating}`);
     queryString += `HAVING AVG(property_reviews.rating) > $${queryParams.length} `;
@@ -191,8 +202,6 @@ const getAllProperties = (options, limit = 10) => {
   ORDER BY cost_per_night
   LIMIT $${queryParams.length};
     `;
-
-  //console.log(queryString, queryParams);
 
   return pool.query(queryString, queryParams)
     .then((result) => {
@@ -214,8 +223,7 @@ exports.getAllProperties = getAllProperties;
  */
 const addProperty = function (property) {
 
-  console.log(property);
-
+  // insert a new property to the database using info entered by user
   const queryString = `
   INSERT INTO properties (
     owner_id,
