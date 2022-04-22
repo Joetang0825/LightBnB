@@ -3,7 +3,7 @@
 Lighthouse BnB is an application that allows homeowners to rent out their homes. Users can search their dream vacation properties, book their reservation and provide reviews. 
 
 ## Final Product
-
+![LightBnB - Start to plan your vacation](./docs/Light_BnB.png)
 
 ## Getting Started
 
@@ -18,4 +18,11 @@ Lighthouse BnB is an application that allows homeowners to rent out their homes.
 - Express
 - Node 5.10.x or above
 - body-parser
-- chance
+- Bcrypt
+- Cookie-session
+- Nodemon
+- Pg
+
+## ERD
+
+ERD is included for reference.
