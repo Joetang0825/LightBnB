@@ -114,7 +114,7 @@ const getAllReservations = function (guest_id, limit = 10) {
 
   // query database to find all reservation for a user
   const queryString = `
-  SELECT reservations.*, properties.*
+  SELECT reservations.*, properties.*, avg(property_reviews.rating) as average_rating
   FROM reservations
   JOIN properties ON reservations.property_id = properties.id
   JOIN property_reviews ON properties.id = property_reviews.property_id
