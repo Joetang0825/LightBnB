@@ -172,7 +172,8 @@ const getAllProperties = (options, limit = 10) => {
 
   // city is entered as part of the search criteria
   if (options.city) {
-    queryParams.push(`%${options.city.toLowerCase()}%`);
+    queryParams.push(`%${options.city}%`);
+    // use ILIKE to compare city but case-insensitive
     queryString += `WHERE city ILIKE $${queryParams.length} `;
   }
 
@@ -189,12 +190,12 @@ const getAllProperties = (options, limit = 10) => {
   }
 
   queryString += `
-  GROUP BY properties.id`
+  GROUP BY properties.id `
 
   // return properties that have higher average rating than the entered rating
   if (options.minimum_rating) {
     queryParams.push(`${options.minimum_rating}`);
-    queryString += `HAVING AVG(property_reviews.rating) > $${queryParams.length} `;
+    queryString += `HAVING AVG(property_reviews.rating) >= $${queryParams.length} `;
   }
 
   queryParams.push(limit);
